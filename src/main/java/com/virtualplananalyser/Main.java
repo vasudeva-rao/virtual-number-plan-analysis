@@ -1,153 +1,192 @@
 package com.company;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
-class TrieNodeqwq {
-    Map<Character, TrieNodeqwq> childrenqwq = new HashMap<>();
-    boolean isEndOfWordqwq = false;
-}
+class QueryNode {
+    String aspQuery;
+    int aspFrequency;
+    int aspHeight;
+    QueryNode aspLeft, aspRight;
 
-class Trieqwq {
-    TrieNodeqwq rootqwq;
-
-    public Trieqwq() {
-        rootqwq = new TrieNodeqwq();
-    }
-
-    // Insert a word into the Trie
-    public void insertqwq(String wordqwq) {
-        TrieNodeqwq nodeqwq = rootqwq;
-        wordqwq = wordqwq.toLowerCase();  // Convert to lowercase
-        for (char chqwq : wordqwq.toCharArray()) {
-            nodeqwq.childrenqwq.putIfAbsent(chqwq, new TrieNodeqwq());
-            nodeqwq = nodeqwq.childrenqwq.get(chqwq);
-        }
-        nodeqwq.isEndOfWordqwq = true;
-    }
-
-    // Search for a word in the Trie
-    public boolean searchqwq(String wordqwq) {
-        TrieNodeqwq nodeqwq = rootqwq;
-        wordqwq = wordqwq.toLowerCase();  // Convert to lowercase
-        for (char chqwq : wordqwq.toCharArray()) {
-            nodeqwq = nodeqwq.childrenqwq.get(chqwq);
-            if (nodeqwq == null) {
-                return false;
-            }
-        }
-        return nodeqwq.isEndOfWordqwq;
-    }
-
-    // Generate all words stored in the Trie
-    public List<String> generateWordsqwq() {
-        return generateWordsHelperqwq("", rootqwq);
-    }
-
-    private List<String> generateWordsHelperqwq(String prefixqwq, TrieNodeqwq nodeqwq) {
-        List<String> wordsqwq = new ArrayList<>();
-        if (nodeqwq.isEndOfWordqwq) {
-            wordsqwq.add(prefixqwq);
-        }
-        for (char chqwq : nodeqwq.childrenqwq.keySet()) {
-            wordsqwq.addAll(generateWordsHelperqwq(prefixqwq + chqwq, nodeqwq.childrenqwq.get(chqwq)));
-        }
-        return wordsqwq;
+    public QueryNode(String aspQuery) {
+        this.aspQuery = aspQuery;
+        this.aspFrequency = 1;
+        this.aspHeight = 1;
     }
 }
 
-class SpellCheckerqwq {
-    private final Trieqwq trieqwq;
+class AVLSearchTree {
+    private QueryNode aspRoot;
+    private final Map<String, Integer> aspSearchLog = new HashMap<>();  // For tracking top searches
 
-    public SpellCheckerqwq(List<String> vocabularyqwq) {
-        trieqwq = new Trieqwq();
-        for (String wordqwq : vocabularyqwq) {
-            trieqwq.insertqwq(wordqwq.toLowerCase());  // Convert to lowercase
-        }
+    private int aspHeight(QueryNode aspNode) {
+        return aspNode == null ? 0 : aspNode.aspHeight;
     }
 
-    // Calculate Levenshtein Distance between two words
-    private int editDistanceqwq(String word1qwq, String word2qwq) {
-        int mqwq = word1qwq.length();
-        int nqwq = word2qwq.length();
-        int[][] dpqwq = new int[mqwq + 1][nqwq + 1];
-
-        for (int iqwq = 0; iqwq <= mqwq; iqwq++) dpqwq[iqwq][0] = iqwq;
-        for (int jqwq = 0; jqwq <= nqwq; jqwq++) dpqwq[0][jqwq] = jqwq;
-
-        for (int iqwq = 1; iqwq <= mqwq; iqwq++) {
-            for (int jqwq = 1; jqwq <= nqwq; jqwq++) {
-                if (word1qwq.charAt(iqwq - 1) == word2qwq.charAt(jqwq - 1)) {
-                    dpqwq[iqwq][jqwq] = dpqwq[iqwq - 1][jqwq - 1];
-                } else {
-                    dpqwq[iqwq][jqwq] = 1 + Math.min(dpqwq[iqwq - 1][jqwq - 1], Math.min(dpqwq[iqwq - 1][jqwq], dpqwq[iqwq][jqwq - 1]));
-                }
-            }
-        }
-        return dpqwq[mqwq][nqwq];
+    private void aspUpdateHeight(QueryNode aspNode) {
+        aspNode.aspHeight = 1 + Math.max(aspHeight(aspNode.aspLeft), aspHeight(aspNode.aspRight));
     }
 
-    // Get alternative suggestions within a maximum edit distance, considering words with one missing or extra character
-    public List<String> getSuggestionsqwq(String wordqwq, int maxDistanceqwq) {
-        List<String> suggestionsqwq = new ArrayList<>();
-        wordqwq = wordqwq.toLowerCase();  // Convert to lowercase
-        for (String vocabWordqwq : trieqwq.generateWordsqwq()) {
-            int distanceqwq = editDistanceqwq(wordqwq, vocabWordqwq);
-            if (distanceqwq <= maxDistanceqwq && Math.abs(vocabWordqwq.length() - wordqwq.length()) <= 1) {
-                suggestionsqwq.add(vocabWordqwq);
-            }
-        }
-        return suggestionsqwq;
+    private QueryNode aspRightRotate(QueryNode aspY) {
+        QueryNode aspX = aspY.aspLeft;
+        QueryNode aspT2 = aspX.aspRight;
+
+        aspX.aspRight = aspY;
+        aspY.aspLeft = aspT2;
+
+        aspUpdateHeight(aspY);
+        aspUpdateHeight(aspX);
+
+        return aspX;
     }
 
-    // Check if the word is correct or suggest similar alternatives
-    public String checkWordqwq(String wordqwq) {
-        wordqwq = wordqwq.toLowerCase();  // Convert to lowercase
-        if (trieqwq.searchqwq(wordqwq)) {
-            return "'" + wordqwq + "' is spelled correctly.";
+    private QueryNode aspLeftRotate(QueryNode aspX) {
+        QueryNode aspY = aspX.aspRight;
+        QueryNode aspT2 = aspY.aspLeft;
+
+        aspY.aspLeft = aspX;
+        aspX.aspRight = aspT2;
+
+        aspUpdateHeight(aspX);
+        aspUpdateHeight(aspY);
+
+        return aspY;
+    }
+
+    private int aspGetBalance(QueryNode aspNode) {
+        return aspNode == null ? 0 : aspHeight(aspNode.aspLeft) - aspHeight(aspNode.aspRight);
+    }
+
+    public void aspInsertQuery(String aspQuery) {
+        if (aspQuery == null || aspQuery.trim().isEmpty()) {
+            System.out.println("Invalid query. Please provide non-empty queries only.");
+            return;
+        }
+        aspRoot = aspInsertQuery(aspRoot, aspQuery.toLowerCase());
+    }
+
+    private QueryNode aspInsertQuery(QueryNode aspNode, String aspQuery) {
+        if (aspNode == null) {
+            return new QueryNode(aspQuery);
+        }
+
+        if (aspQuery.equals(aspNode.aspQuery)) {
+            aspNode.aspFrequency++;  // Word already exists; increment frequency
+            return aspNode;
+        } else if (aspQuery.compareTo(aspNode.aspQuery) < 0) {
+            aspNode.aspLeft = aspInsertQuery(aspNode.aspLeft, aspQuery);
         } else {
-            List<String> suggestionsqwq = getSuggestionsqwq(wordqwq, 2);
-            if (!suggestionsqwq.isEmpty()) {
-                return "'" + wordqwq + "' is not found. Did you mean: " + String.join(", ", suggestionsqwq) + "?";
-            } else {
-                return "No suggestions found for '" + wordqwq + "'.";
-            }
+            aspNode.aspRight = aspInsertQuery(aspNode.aspRight, aspQuery);
         }
+
+        aspUpdateHeight(aspNode);
+        return aspBalance(aspNode, aspQuery);
+    }
+
+    private QueryNode aspBalance(QueryNode aspNode, String aspQuery) {
+        int aspBalance = aspGetBalance(aspNode);
+
+        if (aspBalance > 1 && aspQuery.compareTo(aspNode.aspLeft.aspQuery) < 0) {
+            return aspRightRotate(aspNode);
+        }
+
+        if (aspBalance < -1 && aspQuery.compareTo(aspNode.aspRight.aspQuery) > 0) {
+            return aspLeftRotate(aspNode);
+        }
+
+        if (aspBalance > 1 && aspQuery.compareTo(aspNode.aspLeft.aspQuery) > 0) {
+            aspNode.aspLeft = aspLeftRotate(aspNode.aspLeft);
+            return aspRightRotate(aspNode);
+        }
+
+        if (aspBalance < -1 && aspQuery.compareTo(aspNode.aspRight.aspQuery) < 0) {
+            aspNode.aspRight = aspRightRotate(aspNode.aspRight);
+            return aspLeftRotate(aspNode);
+        }
+
+        return aspNode;
+    }
+
+    public int aspSearchQueryFrequency(String aspQuery) {
+        QueryNode aspResult = aspSearch(aspRoot, aspQuery.toLowerCase());
+        if (aspResult != null) {
+            aspResult.aspFrequency++;  // Increase frequency each time a query is searched
+            aspSearchLog.put(aspQuery, aspResult.aspFrequency);  // Update search log
+        }
+        return aspResult == null ? 0 : aspResult.aspFrequency;
+    }
+
+    private QueryNode aspSearch(QueryNode aspNode, String aspQuery) {
+        if (aspNode == null || aspNode.aspQuery.equals(aspQuery)) {
+            return aspNode;
+        }
+        if (aspQuery.compareTo(aspNode.aspQuery) < 0) {
+            return aspSearch(aspNode.aspLeft, aspQuery);
+        } else {
+            return aspSearch(aspNode.aspRight, aspQuery);
+        }
+    }
+
+    public void aspDisplayQueries() {
+        System.out.println("\nQuery frequencies (sorted):");
+        aspDisplayQueries(aspRoot);
+    }
+
+    private void aspDisplayQueries(QueryNode aspNode) {
+        if (aspNode != null) {
+            aspDisplayQueries(aspNode.aspLeft);
+            System.out.printf("%-15s : %d%n", aspNode.aspQuery, aspNode.aspFrequency);
+            aspDisplayQueries(aspNode.aspRight);
+        }
+    }
+
+    public void aspDisplayTopSearches(int aspN) {
+        System.out.println("\nTop " + aspN + " search queries:");
+        aspSearchLog.entrySet().stream()
+                .sorted((aspA, aspB) -> aspB.getValue().compareTo(aspA.getValue())) // Sort by frequency in descending order
+                .limit(aspN)
+                .forEach(aspEntry -> System.out.printf("%-15s : %d%n", aspEntry.getKey(), aspEntry.getValue()));
     }
 }
 
 public class Main {
-    // Load vocabulary from a file into a list
-    private static List<String> loadVocabularyqwq(String filePath) {
-        List<String> vocabularyqwq = new ArrayList<>();
-        try (BufferedReader readerqwq = new BufferedReader(new FileReader(filePath))) {
-            String lineqwq;
-            while ((lineqwq = readerqwq.readLine()) != null) {
-                vocabularyqwq.add(lineqwq.trim().toLowerCase());  // Convert to lowercase
+    public static void main(String[] args) {
+        AVLSearchTree aspSearchTree = new AVLSearchTree();
+        Scanner aspScanner = new Scanner(System.in);
+
+        System.out.println("Enter search queries. Type 'exit' to finish entering queries.");
+
+        while (true) {
+            System.out.print("Enter query: ");
+            String aspQuery = aspScanner.nextLine();
+
+            if (aspQuery.equalsIgnoreCase("exit")) {
+                break;
             }
-        } catch (IOException eqwq) {
-            System.out.println("Error reading vocabulary file: " + eqwq.getMessage());
+
+            aspSearchTree.aspInsertQuery(aspQuery);
         }
-        return vocabularyqwq;
-    }
 
-    public static void main(String[] argsqwq) {
-        // Load vocabulary from a specified file path
-        List<String> vocabularyqwq = loadVocabularyqwq("/Users/ashvi/Downloads/words.txt");
-        SpellCheckerqwq spellCheckerqwq = new SpellCheckerqwq(vocabularyqwq);
+        System.out.println("\nAll entered queries with frequencies:");
+        aspSearchTree.aspDisplayQueries();
 
-        // Take input from the user for spell-checking
-        Scanner scannerqwq = new Scanner(System.in);
-        System.out.print("Enter a word to check: ");
-        String wordqwq = scannerqwq.nextLine().trim();
+        System.out.println("\nEnter a query to search for its frequency. Type 'exit' to end.");
+        while (true) {
+            System.out.print("Query to search: ");
+            String aspSearchQuery = aspScanner.nextLine();
 
-        // Display the spell-check result
-        System.out.println(spellCheckerqwq.checkWordqwq(wordqwq));
+            if (aspSearchQuery.equalsIgnoreCase("exit")) {
+                break;
+            }
+
+            int aspFrequency = aspSearchTree.aspSearchQueryFrequency(aspSearchQuery);
+            System.out.println("Frequency of '" + aspSearchQuery + "': " + aspFrequency);
+        }
+
+        System.out.println("\nEnter the number of top searches you want to display:");
+        int aspTopN = aspScanner.nextInt();
+        aspSearchTree.aspDisplayTopSearches(aspTopN);
+
+        aspScanner.close();
     }
 }
